@@ -14,13 +14,14 @@ Inductive wclause : Type :=
 (* Optimization: remove unused tables from FROM/JOIN clauses. *)
 
 Definition fruits : list (string -> string) := [
-    fun col => if string_dec col "id" then "1" else "orange" ;
-    fun col => if string_dec col "id" then "2" else "apple" ;                              fun col => if string_dec col "id" then "3" else "banana" ;
-    fun col => if string_dec col "id" then "4" else "kiwi"].
+    fun c => match c with "id"=>"1"|"name"=>"orange"|"price"=>"5"|_=>"" end ;
+    fun c => match c with "id"=>"2"|"name"=>"apple"|"price"=>"9"|_=>"" end ;
+    fun c => match c with "id"=>"3"|"name"=>"banana"|"price"=>"5"|_=>"" end ;
+    fun c => match c with "id"=>"4"|"name"=>"kiwi"|"price"=>"8"|_=>"" end].
 
 Example ex1 : map (fun r => (r "name")) fruits
                = ["orange" ; "apple" ; "banana" ; "kiwi"].
-Proof. reflexivity. Qed.
+Proof. simpl. reflexivity. Qed.
 
 Definition q1 : stmt := (Select "name").
 
@@ -56,5 +57,13 @@ Proof. simpl. reflexivity. Qed.
 
 Example ex5 : (eval ["id";"name"] fruits [(WhereEqual "name" "kiwi")])
               = [ ["4";"kiwi"] ].
+Proof. simpl. reflexivity. Qed.
+
+Example ex6 : (eval ["name"] fruits [(WhereEqual "price" "5")])
+              = [ ["orange"] ; ["banana"]].
+Proof. simpl. reflexivity. Qed.
+
+Example ex7 : (eval ["name"] fruits [(WhereEqual "price" "5");(WhereEqual "id" "3")])
+              = [ ["banana"]].
 Proof. simpl. reflexivity. Qed.
 
