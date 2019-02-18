@@ -2,8 +2,14 @@ From Coq Require Import Strings.String.
 From Coq Require Import Lists.List.
 Import ListNotations.
 
-(* Transformer: switches b/w dialects, prove rel is involution. *)
+(* Transformer: translate b/w dialects, prove involutionary. *)
 (* Optimization: remove unused tables from FROM/JOIN clauses. *)
+(* If a superquery doesn't use the fields of its subquery, eliminate subquery. *)
+(* If a superquery only uses fields of its subquery, reduce to subquery. *)
+(* Oracle uses DUAL for blank tablename; with Postgres just write SELECT FROM. *)
+(* Postgres requires parens and alias for subqueries, is optional in Oracle. *)
+(* Selecting COUNT() when grouping by a primary key is equivalent to simply
+   counting the rows of the relation. *)
 
 Local Open Scope string_scope.
 
@@ -83,7 +89,7 @@ Definition evalstmt (stmt : sqlstmt) : relation :=
         end
     in
     (* This is a left join; if right relation has no records, return left as is. *)
-    match (snd rel) with
+    match (snd reljoin) with
     | _::_ =>  (fields, (map (select_fields fields)
                  (flat_map (fun row_l => ljoin (snd reljoin) (row_l)) (snd rel))))
     | [] => (fields, (map (select_fields fields) (snd rel)))
@@ -144,3 +150,4 @@ Example ex7_join1 : (render (evalstmt (Select ["sname" ; "name"] stores
                                         (Some (LeftJoin fruits "sfruit" "id")) None)))
               = [["sname";"name"];["La Tienda";"kiwi"];["Duka 88";"orange"]].
 Proof. unfold render. simpl. reflexivity. Qed.
+
