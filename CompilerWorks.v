@@ -16,8 +16,7 @@ Inductive wclause : Type :=
 Definition relation : Type := (list string) * list (string -> string).
 
 Inductive sqlstmt : Type :=
-| Select (flds: list string) (rel: relation)
-| SelectWhere (flds: list string) (rel: relation) (wheres: list wclause).
+| Select (flds: list string) (rel: relation) (wheres: option (list wclause)).
 
 Definition fruits : relation :=
   (["id" ; "name" ; "price"] ,
@@ -58,7 +57,7 @@ Fixpoint evalwhere (w : wclause) (rel : list (string -> string)) :=
 
 Fixpoint evalstmt (stmt : sqlstmt) : relation :=
   match stmt with
-  | Select fields rel =>
+  | Select fields rel _ =>
     let fix select_fields (flds : list string) (row : (string -> string))
                           : (string -> string) :=
       match flds with
@@ -68,20 +67,19 @@ Fixpoint evalstmt (stmt : sqlstmt) : relation :=
       end
     in 
     (fields, (map (select_fields fields) (snd rel)))
-  | SelectWhere flds rel wclauses => rel
-    (* | whd::wtl => eval flds (evalwhere whd rel) wtl *)
+    (* Old wheres: | whd::wtl => eval flds (evalwhere whd rel) wtl *)
   end.
 
-Example ex2 : (render (evalstmt (Select ["name"] fruits)))
+Example ex2 : (render (evalstmt (Select ["name"] fruits None)))
               = [["name"] ; ["orange"] ; ["apple"] ; ["banana"] ; ["kiwi"] ].
 Proof. unfold render. simpl. reflexivity. Qed. 
 
-Example ex3 : (render (evalstmt (Select ["id";"name"] fruits)))
+Example ex3 : (render (evalstmt (Select ["id";"name"] fruits None)))
               = [["id";"name"] ; ["1";"orange"] ; ["2";"apple"] ;
                    ["3";"banana"] ; ["4";"kiwi"] ].
 Proof. simpl. reflexivity. Qed.
 
-Example ex4 : (render (evalstmt (Select ["name" ; "id"] fruits)))
+Example ex4 : (render (evalstmt (Select ["name" ; "id"] fruits None)))
               = [["name";"id"] ; ["orange";"1"] ; ["apple";"2"] ; ["banana";"3"] ; ["kiwi";"4"] ].
 Proof. unfold render. simpl. reflexivity. Qed.
 
@@ -102,7 +100,7 @@ Proof. simpl. reflexivity. Qed.
  *)
 
 Example ex6_subquery : (render (evalstmt (Select ["name"]
-                                 (evalstmt (Select ["price";"name"] fruits)))))
+                               (evalstmt (Select ["price";"name"] fruits None)) None)))
               = [["name"] ; ["orange"] ; ["apple"] ; ["banana"] ; ["kiwi"] ].
 Proof. unfold render. simpl. reflexivity. Qed.
 
