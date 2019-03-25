@@ -10,6 +10,10 @@ Import ListNotations.
 (* Postgres requires parens and alias for subqueries, is optional in Oracle. *)
 (* Selecting COUNT() when grouping by a primary key is equivalent to simply
    counting the rows of the relation. *)
+(* Sources of inspiration:
+   - http://cosette.cs.washington.edu/
+   - https://framagit.org/formaldata
+*)
 
 Local Open Scope string_scope.
 
